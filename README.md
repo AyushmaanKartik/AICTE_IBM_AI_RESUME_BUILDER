@@ -1,4 +1,3 @@
-````markdown
 # 🧠 AI Resume Builder
 
 An **AI-powered resume generator** that instantly creates professional, ATS-friendly resumes using **Google Gemini API** and a modern **Python + TailwindCSS** interface.
