@@ -39,7 +39,7 @@ Built for simplicity, speed, and accuracy — just enter your details and get a 
 ```bash
 git clone https://github.com/<your-username>/AI-Resume-Builder.git
 cd AI-Resume-Builder
-````
+
 
 ### 2️⃣ Install Dependencies
 
