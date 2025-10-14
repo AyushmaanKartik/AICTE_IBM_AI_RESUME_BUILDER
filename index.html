@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* Custom styles for resume output to look professional */
+        #resumeOutput {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        /* Style for Markdown H1/H2 converted to HTML (simulating an ideal resume header) */
+        #resumeOutput h1 { font-size: 2rem; font-weight: 700; border-bottom: none; margin-bottom: 0.5rem; }
+        #resumeOutput h2 { font-size: 1.25rem; font-weight: 600; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.25rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        #resumeOutput p { margin-bottom: 0.5rem; }
+        #resumeOutput ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        #resumeOutput li { margin-bottom: 0.25rem; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Hide UI controls when printing */
+        @media print {
+            #inputArea, #savePdfButton, #statusMessage {
+                display: none !important;
+            }
+            #appContainer {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #resumeOutput {
+                box-shadow: none !important;
+                padding: 0 !important;
+                /* Ensure content fits A4/Letter size */
+                width: 7.5in !important;
+                max-width: 100% !important;
+                margin: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div id="appContainer" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <div id="inputArea" class="bg-white p-6 rounded-xl shadow-lg h-fit">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">AI Resume Input</h1>
+            <p class="text-gray-600 mb-6">Fill in your details, and the AI will draft a professional resume.</p>
+
+            <form id="resumeForm" class="space-y-6">
+
+                <div>
+                    <h2 class="text-xl font-semibold mb-3 text-green-600">1. Personal & Contact Information</h2>
+                    <div class="space-y-4">
+                        <input type="text" id="fullName" placeholder="Full Name (e.g., Jane Doe)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                        <input type="text" id="contactInfo" placeholder="Email, Phone, LinkedIn URL, City" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold mb-3 text-green-600">2. Target Role & Professional Summary</h2>
+                    <input type="text" id="targetRole" placeholder="Target Job Title (e.g., Senior Software Engineer)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 mb-4">
+                    <textarea id="summary" rows="3" placeholder="Briefly describe your career goals and core expertise (e.g., '5+ years experience building scalable web applications...')" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold mb-3 text-green-600">3. Work Experience (most recent first)</h2>
+                    <textarea id="experience" rows="6" placeholder="List your roles, companies, dates, and 3-5 key achievements/responsibilities for each. Focus on quantifiable results. Example: Led a team of 3 engineers to deliver X, resulting in 15% efficiency gain." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-3 text-green-600">4. Education</h2>
+                        <textarea id="education" rows="3" placeholder="Degree, Institution, City, Graduation Year" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold mb-3 text-green-600">5. Key Skills</h2>
+                        <textarea id="skills" rows="3" placeholder="List technical and soft skills (e.g., Python, AWS, Leadership, Data Analysis)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" id="generateButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md">
+                    Generate Resume
+                </button>
+            </form>
+        </div>
+
+        <div id="outputArea" class="bg-gray-100 p-6 rounded-xl shadow-lg relative min-h-[400px]">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4 border-b pb-2">Resume Preview (Markdown)</h1>
+
+            <div id="statusMessage" class="text-center py-4 text-gray-600">
+                Enter your details and click 'Generate Resume' to see your draft here.
+            </div>
+
+            <div id="loadingIndicator" class="hidden flex justify-center items-center absolute inset-0 bg-white bg-opacity-80 z-10">
+                <div class="flex flex-col items-center">
+                    <div class="spinner mb-3"></div>
+                    <p class="text-green-600 font-medium">AI is drafting your resume...</p>
+                </div>
+            </div>
+
+            <div id="resumeOutput" class="rounded-lg text-gray-800 prose max-w-none transition duration-300">
+                </div>
+
+            <button id="savePdfButton" class="hidden mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md" onclick="saveAsPdf()">
+                Save as PDF (via Print)
+            </button>
+
+            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const form = document.getElementById('resumeForm');
+        const generateButton = document.getElementById('generateButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resumeOutput = document.getElementById('resumeOutput');
+        const statusMessage = document.getElementById('statusMessage');
+        const savePdfButton = document.getElementById('savePdfButton');
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        // IMPORTANT: Replace "YOUR_GEMINI_API_KEY_HERE" with your actual Gemini API Key.
+        // For a public GitHub project, consider keeping the API key secret and
+        // using a serverless function, but for a simple project, hardcoding is common.
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
+        const API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
+
+        function showMessage(text, isError = false) {
+            errorMessageDiv.textContent = text;
+            if (isError) {
+                errorMessageDiv.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+                errorMessageDiv.classList.add('bg-red-100', 'text-red-700');
+            } else {
+                errorMessageDiv.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Simple Markdown to HTML converter for display purposes.
+         */
+        function markdownToHtml(markdown) {
+            let html = markdown || "";
+
+            // Convert lists (simple bullet points)
+            html = html.replace(/^\* (.*)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>(\s*<li>.*<\/li>)*)/gs, '<ul>$1</ul>');
+
+            // Convert bold and italics
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Convert headings (H1, H2) - H1 should be the name, H2 for sections
+            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+
+            // Convert remaining lines into paragraphs (excluding ul/li/h tags which are multi-line)
+            html = html.split('\n').map(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine || trimmedLine.startsWith('<h') || trimmedLine.startsWith('<ul') || trimmedLine.startsWith('</ul') || trimmedLine.startsWith('<li') || trimmedLine.startsWith('</li')) {
+                    return line;
+                }
+                return `<p>${line}</p>`;
+            }).join('\n');
+
+            return html;
+        }
+
+        /**
+         * Calls the Gemini API to generate the resume content.
+         */
+        async function callGeminiAPI(userData, retries = 3) {
+            const systemPrompt = `You are a world-class professional resume writer. Your task is to generate a polished, modern, and high-impact resume in clear **Markdown format** based *only* on the user's input. 
+            
+            **Formatting Rules:**
+            1. Use a single '#' for the full name.
+            2. Use a single '##' for section headers (e.g., ## Professional Summary, ## Experience, ## Education, ## Skills).
+            3. Use bullet points '*' for job responsibilities/achievements and skill lists.
+            4. Do not include any introductory or concluding sentences outside the resume content itself.
+            5. Ensure the language is action-oriented and professional.`;
+
+            const userQuery = `Generate a resume. Here is the candidate data:
+                Full Name: ${userData.fullName}
+                Contact Information: ${userData.contactInfo}
+                Target Role: ${userData.targetRole}
+                Professional Summary: ${userData.summary}
+                Work Experience: ${userData.experience}
+                Education: ${userData.education}
+                Key Skills: ${userData.skills}
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                config: {
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    }
+                },
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(API_URL + API_KEY, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        // Attempt to read the error from the response body if available
+                        const errorBody = await response.json();
+                        const errorDetail = errorBody.error?.message || `HTTP error! status: ${response.status}`;
+                        throw new Error(`API Request Failed: ${errorDetail}`);
+                    }
+
+                    const result = await response.json();
+                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (generatedText) {
+                        return generatedText;
+                    } else {
+                        throw new Error("API response was empty or malformed.");
+                    }
+                } catch (error) {
+                    if (i < retries - 1) {
+                        const delay = Math.pow(2, i) * 1000; // Exponential backoff
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw error; // Re-throw the error after final retry
+                    }
+                }
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+                 showMessage("ERROR: Please replace 'YOUR_GEMINI_API_KEY_HERE' in the script with your actual API key.", true);
+                 return;
+            }
+
+            const userData = {
+                fullName: document.getElementById('fullName').value,
+                contactInfo: document.getElementById('contactInfo').value,
+                targetRole: document.getElementById('targetRole').value,
+                summary: document.getElementById('summary').value,
+                experience: document.getElementById('experience').value,
+                education: document.getElementById('education').value,
+                skills: document.getElementById('skills').value,
+            };
+
+            // Clear previous results
+            resumeOutput.innerHTML = '';
+            errorMessageDiv.classList.add('hidden');
+            savePdfButton.classList.add('hidden');
+            statusMessage.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            generateButton.disabled = true;
+            generateButton.textContent = 'Generating...';
+
+            try {
+                const markdownResume = await callGeminiAPI(userData);
+
+                // Convert markdown to simple HTML for display
+                const htmlResume = markdownToHtml(markdownResume);
+
+                resumeOutput.innerHTML = htmlResume;
+                statusMessage.classList.add('hidden');
+                savePdfButton.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Resume Generation Error:", error);
+                resumeOutput.innerHTML = '';
+                statusMessage.classList.remove('hidden');
+                statusMessage.textContent = 'Enter your details and click \'Generate Resume\' to see your draft here.';
+                showMessage('Failed to generate resume. Error: ' + error.message, true);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate Resume';
+            }
+        });
+
+        // Function to trigger browser print dialog for PDF saving
+        window.saveAsPdf = function() {
+            window.print();
+        };
+
+        // Populate form with example data for quick testing
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('fullName').value = 'Alexandra V. Chen';
+            document.getElementById('contactInfo').value = 'alex.chen@example.com | (555) 123-4567 | linkedin.com/in/alexchen';
+            document.getElementById('targetRole').value = 'Product Manager | Tech Lead';
+            document.getElementById('summary').value = 'Highly results-driven professional with 8+ years of experience in full-stack development, leading cross-functional teams, and successfully launching 4 major software products. Seeking a challenging Product Manager role to leverage technical expertise and strategic thinking.';
+            document.getElementById('experience').value = `Senior Software Engineer | Innovatech Solutions | 2018 - Present
+- Led a team of 5 engineers in the migration of legacy services to AWS Lambda, resulting in a 40% reduction in operating costs.
+- Developed and launched a new customer-facing analytics dashboard using React and Python, increasing daily active users by 25k.
+
+Software Developer | Startup X | 2016 - 2018
+- Implemented core API features for a real-time data streaming platform, improving latency by 15%.`;
+            document.getElementById('education').value = 'M.S. Computer Science, Stanford University, 2016 | B.S. Electrical Engineering, MIT, 2014';
+            document.getElementById('skills').value = 'Python, JavaScript, TypeScript, React, Node.js, AWS (Lambda, S3, EC2), SQL, Agile Methodology, Strategic Planning, Team Leadership';
+        });
+
+    </script>
+</body>
+</html>
