@@ -1,47 +1,46 @@
-Absolutely ✅ — here’s the **complete, ready-to-copy** `README.md` file for your GitHub project.
-It’s formatted beautifully for both **academic submission** and **portfolio presentation** — includes setup, API docs, screenshot, and future scope.
-
----
-
 ````markdown
 # 🧠 AI Resume Builder
 
-An **AI-powered resume generator** that instantly creates professional, ATS-friendly resumes using **Google Gemini API** and a modern **Python + TailwindCSS** interface.  
+An **AI-powered resume generator** that instantly creates professional, ATS-friendly resumes using **Google Gemini API** and a modern **Python + TailwindCSS** interface.
+
 Built for simplicity, speed, and accuracy — just enter your details and get a complete, editable resume with one click.
 
 ---
 
 ## 🚀 Features
 
-- 🤖 **AI-Powered Resume Generation** – Automatically creates resumes using AI based on your input.  
-- 📝 **Inline Editing** – Edit your resume directly before exporting to PDF.  
-- 🧾 **PDF Export** – Clean, print-ready PDF layout with perfect spacing.  
-- 🎨 **Responsive UI** – Modern, minimal, and mobile-friendly design built with TailwindCSS.  
-- 🔒 **Environment Secure** – Uses `.env` file for safe API key handling.
+* 🤖 **AI-Powered Resume Generation** – Automatically creates polished resumes using the Gemini API based on your raw input.
+* 📝 **Inline Editing** – Edit and refine the generated resume content directly within the browser before exporting.
+* 🧾 **PDF Export** – Generates a clean, professional, print-ready PDF layout via the browser's native print function.
+* 🎨 **Responsive UI** – Modern, minimal, and mobile-friendly design built with **TailwindCSS**.
+* 🔒 **Environment Secure** – Safely handles the API key via a **FastAPI backend** using a `.env` file, protecting it from client-side exposure.
 
 ---
 
 ## 🧩 Tech Stack
 
-| Component | Technology |
-|------------|-------------|
-| **Backend** | Python (FastAPI) |
-| **Frontend** | HTML5, TailwindCSS, JavaScript |
-| **AI Model** | Google Gemini 1.5 / 2.0 Flash |
-| **PDF Export** | Browser-native print-to-PDF |
-| **Version Control** | Git & GitHub |
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Backend** | **Python (FastAPI)** | Provides a fast, asynchronous API endpoint to securely handle the Gemini key. |
+| **Frontend** | HTML5, TailwindCSS, JavaScript | A modern, responsive interface for input and display. |
+| **AI Model** | **Google Gemini 1.5 / 2.0 Flash** | The large language model responsible for generating and formatting the resume content. |
+| **PDF Export** | Browser-Native | Relies on the browser's print-to-PDF functionality for high-quality document saving. |
+| **Version Control** | Git & GitHub | Used for source control and collaboration. |
 
 ---
 
 ## ⚙️ Installation & Setup
 
+This project requires both the Python backend (FastAPI) and a local frontend server (for `index.html`) to run concurrently.
+
 ### 1️⃣ Clone the Repository
+
 ```bash
-git clone https://github.com/<your-username>/AI-Resume-Builder.git
+git clone [https://github.com/](https://github.com/)<your-username>/AI-Resume-Builder.git
 cd AI-Resume-Builder
+````
 
-
-### 2️⃣ Install Dependencies
+### 2️⃣ Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -49,39 +48,49 @@ pip install -r requirements.txt
 
 ### 3️⃣ Configure Environment Variables
 
-Create a `.env` file in the same directory as `app.py`:
+You must provide your Gemini API key for the backend to function.
 
-```bash
-GEMINI_API_KEY=your_google_gemini_api_key_here
-```
+1.  Obtain your key from the [Google AI Studio documentation](https://ai.google.dev).
 
-(See `.env.example` for reference.)
+2.  Create a file named **`.env`** in the root directory.
 
-### 4️⃣ Run the Backend Server
+3.  Add your key inside the file, following the format in `.env.example`:
+
+    ```bash
+    GEMINI_API_KEY=your_google_gemini_api_key_here
+    ```
+
+### 4️⃣ Run the Backend Server (Terminal 1)
+
+This starts the FastAPI server which handles the secure AI calls.
 
 ```bash
 uvicorn app:app --reload
 ```
 
-Server starts at 👉 **[http://localhost:8000](http://localhost:8000)**
+The API will be available at 👉 **`http://localhost:8000`**
 
-### 5️⃣ Open the Frontend
+### 5️⃣ Open the Frontend UI (Terminal 2)
+
+Open a **second terminal** window in the same directory and use Python's simple HTTP server to serve the `index.html` file.
 
 ```bash
 python -m http.server 8080
 ```
 
-Then open 👉 **[http://localhost:8080](http://localhost:8080)** in your browser.
+Now open your web browser and navigate to the frontend: 👉 **`http://localhost:8080`**
 
----
+-----
 
-## 🧠 API Endpoint
+## 🧠 API Endpoint Details
 
-| Method   | Endpoint        | Description                                                                        |
-| -------- | --------------- | ---------------------------------------------------------------------------------- |
-| **POST** | `/api/generate` | Sends user resume data to Gemini API and returns Markdown-formatted resume content |
+The frontend sends user data to this single endpoint for processing.
 
-**Sample Request:**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **POST** | `/api/generate` | Sends user resume data to the Gemini API and returns the Markdown-formatted resume content. |
+
+### Sample Request Payload
 
 ```json
 {
@@ -95,7 +104,7 @@ Then open 👉 **[http://localhost:8080](http://localhost:8080)** in your browse
 }
 ```
 
-**Sample Response:**
+### Sample Successful Response
 
 ```json
 {
@@ -103,7 +112,7 @@ Then open 👉 **[http://localhost:8080](http://localhost:8080)** in your browse
 }
 ```
 
----
+-----
 
 ## 📁 File Structure
 
@@ -114,60 +123,60 @@ Then open 👉 **[http://localhost:8080](http://localhost:8080)** in your browse
 ├── index.html          # Frontend UI (TailwindCSS + JS)
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Example environment configuration
-├── README.md           # Documentation
+├── README.md           # This documentation file
 └── Screenshot.png      # Demo screenshot
 ```
 
-> 💡 All files are placed in the root directory for **easy setup and grading**.
-> This structure ensures both frontend and backend run without any additional path configuration.
+> 💡 All files are placed in the root directory for **easy setup and grading**, ensuring both frontend and backend run without additional path configuration.
 
----
+-----
 
-## 🧾 Usage
+## 🧾 Usage Guide
 
-1. Fill out your details in the left panel (name, skills, education, etc.)
-2. Click **Generate Resume** to let the AI create your draft.
-3. Edit your resume directly inline if needed.
-4. Click **Save as PDF** to export a print-ready resume.
+1.  Ensure both the **FastAPI backend** (`:8000`) and the **Frontend server** (`:8080`) are running.
+2.  Fill out your details in the input fields on the left panel.
+3.  Click the **Generate Resume** button. The frontend sends the data to the FastAPI API, which then calls Gemini.
+4.  The generated content appears on the right panel, where it can be edited.
+5.  Click **Save as PDF** to export the final document.
 
----
+-----
 
 ## 📸 Screenshot
 
-![App Screenshot](Screenshot.png)
-
----
+-----
 
 ## 🧭 Future Scope
 
-* 🌐 Add LinkedIn and Indeed integration for auto-fill.
-* 🧠 Include multiple AI resume templates (Modern, Minimalist, Corporate).
-* 💾 Save and manage previous resumes locally or in the cloud.
-* 🗣️ Add multilingual resume generation support.
-* 🧩 Integrate AI-driven job-matching suggestions.
+  * **🌐 Integration:** Add LinkedIn and Indeed integration for auto-fill functionality.
+  * **🧠 Templates:** Include multiple AI-suggested resume templates (Modern, Minimalist, Corporate).
+  * **💾 Data Management:** Implement functionality to save and manage previous resumes locally or in the cloud.
+  * **🗣️ Language Support:** Add multilingual resume generation support.
+  * **🧩 Job Matching:** Integrate AI-driven job-matching and keyword optimization suggestions.
 
----
+-----
 
 ## 🛡️ License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the **[MIT License](https://www.google.com/search?q=LICENSE)**.
 You can freely use, modify, and distribute it with proper attribution.
 
----
+-----
 
 ## ✨ Acknowledgments
 
-* [Google Gemini API](https://ai.google.dev) for the powerful AI model.
-* [TailwindCSS](https://tailwindcss.com) for the sleek, responsive UI.
-* [FastAPI](https://fastapi.tiangolo.com) for the fast, async backend.
+  * [Google Gemini API](https://ai.google.dev) for the powerful AI model.
+  * [TailwindCSS](https://tailwindcss.com) for the sleek, responsive UI.
+  * [FastAPI](https://fastapi.tiangolo.com) for the fast, async backend.
 
----
+-----
 
 ## 👩‍💻 Author
 
 **Developed by:** *Ayushmaan Kartik*
 
----
+-----
 
-⭐ *If you found this project helpful, consider giving it a star on GitHub!*
+⭐ *If you found this project helpful, please give it a star on GitHub\!*
 
+```
+```
