@@ -141,7 +141,7 @@ The frontend sends user data to this single endpoint for processing.
 -----
 
 ## 📸 Screenshot
-
+![App Screenshot](Screenshot.png)
 -----
 
 ## 🧭 Future Scope
