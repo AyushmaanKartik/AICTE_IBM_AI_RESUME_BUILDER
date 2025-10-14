@@ -1,206 +1,181 @@
+Absolutely ✅ — here’s the **complete, ready-to-copy** `README.md` file for your GitHub project.
+It’s formatted beautifully for both **academic submission** and **portfolio presentation** — includes setup, API docs, screenshot, and future scope.
+
+---
+
+````markdown
 # 🧠 AI Resume Builder
 
-A modern web app that uses Google's **Gemini API** to generate professional, AI‑written resumes automatically from user input.
+An **AI-powered resume generator** that instantly creates professional, ATS-friendly resumes using **Google Gemini API** and a modern **Python + TailwindCSS** interface.  
+Built for simplicity, speed, and accuracy — just enter your details and get a complete, editable resume with one click.
 
 ---
 
-## 📁 Project Structure
+## 🚀 Features
 
-```
-AI-Resume-Builder/
-│
-├── backend/
-│   ├── app.py              # FastAPI backend (Gemini API handler)
-│   ├── requirements.txt    # Backend dependencies
-│   ├── .env.example        # Example env file (no real key)
-│   └── .gitignore          # Ignore venv and secrets
-│
-├── frontend/
-│   └── index.html          # Frontend with Tailwind & fetch API
-│
-└── README.md               # This file
-```
+- 🤖 **AI-Powered Resume Generation** – Automatically creates resumes using AI based on your input.  
+- 📝 **Inline Editing** – Edit your resume directly before exporting to PDF.  
+- 🧾 **PDF Export** – Clean, print-ready PDF layout with perfect spacing.  
+- 🎨 **Responsive UI** – Modern, minimal, and mobile-friendly design built with TailwindCSS.  
+- 🔒 **Environment Secure** – Uses `.env` file for safe API key handling.
 
 ---
 
-## ⚙️ Setup Instructions
+## 🧩 Tech Stack
 
-### 1. Clone this repo
+| Component | Technology |
+|------------|-------------|
+| **Backend** | Python (FastAPI) |
+| **Frontend** | HTML5, TailwindCSS, JavaScript |
+| **AI Model** | Google Gemini 1.5 / 2.0 Flash |
+| **PDF Export** | Browser-native print-to-PDF |
+| **Version Control** | Git & GitHub |
 
+---
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/<your-username>/AI-Resume-Builder.git
 cd AI-Resume-Builder
-```
+````
 
-### 2. Backend setup
+### 2️⃣ Install Dependencies
 
 ```bash
-cd backend
-python -m venv venv
-# Activate
-venv\Scripts\activate   # on Windows
-# or
-source venv/bin/activate  # on macOS/Linux
-
 pip install -r requirements.txt
 ```
 
-### 3. Configure `.env`
+### 3️⃣ Configure Environment Variables
 
-Create a file named `.env` inside the `backend` folder:
-
-```env
-GEMINI_API_KEY=your_google_api_key_here
-GEMINI_MODEL=models/gemini-2.0-flash
-```
-
-> You can also copy `.env.example` and rename it to `.env`.
-
-### 4. Run the backend
+Create a `.env` file in the same directory as `app.py`:
 
 ```bash
-uvicorn app:app --reload --port 8000
+GEMINI_API_KEY=your_google_gemini_api_key_here
 ```
 
-Now visit: [http://localhost:8000/docs](http://localhost:8000/docs)
+(See `.env.example` for reference.)
 
-You can test it with:
+### 4️⃣ Run the Backend Server
 
 ```bash
-curl -X POST http://localhost:8000/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-        "fullName":"Jane Doe",
-        "contactInfo":"jane@example.com · 555-1234",
-        "targetRole":"Software Engineer",
-        "summary":"Enthusiastic developer...",
-        "experience":"Company A 2020–Present - Built systems",
-        "education":"B.Tech 2020",
-        "skills":"Python, React, SQL"
-      }'
+uvicorn app:app --reload
 ```
 
----
+Server starts at 👉 **[http://localhost:8000](http://localhost:8000)**
 
-### 5. Frontend setup
-
-You can open the `frontend/index.html` directly or run a local web server:
+### 5️⃣ Open the Frontend
 
 ```bash
-cd frontend
 python -m http.server 8080
 ```
 
-Open your browser: [http://localhost:8080](http://localhost:8080)
-
-Make sure your backend is running on port 8000 and the line below exists in `index.html`:
-
-```js
-const BACKEND_URL = "http://localhost:8000/api/generate";
-```
+Then open 👉 **[http://localhost:8080](http://localhost:8080)** in your browser.
 
 ---
 
-## 🌐 API Overview
+## 🧠 API Endpoint
 
-**Base URL:** `http://localhost:8000`
+| Method   | Endpoint        | Description                                                                        |
+| -------- | --------------- | ---------------------------------------------------------------------------------- |
+| **POST** | `/api/generate` | Sends user resume data to Gemini API and returns Markdown-formatted resume content |
 
-| Endpoint        | Method | Description                                   |
-| --------------- | ------ | --------------------------------------------- |
-| `/health`       | GET    | Check backend and model health                |
-| `/models`       | GET    | List Gemini models available for your API key |
-| `/api/generate` | POST   | Generate a resume in Markdown                 |
-
-### `/api/generate` request body
+**Sample Request:**
 
 ```json
 {
-  "fullName": "John Doe",
-  "contactInfo": "john@example.com",
-  "targetRole": "Data Scientist",
-  "summary": "Results-driven analyst...",
-  "experience": "Google 2020–2023...",
-  "education": "MIT 2016–2020",
-  "skills": "Python, TensorFlow, SQL"
+  "fullName": "Jane Doe",
+  "contactInfo": "jane@ex.com | (555) 123-4567 | Miami",
+  "targetRole": "Software Engineer",
+  "summary": "Results-driven developer skilled in AI & cloud technologies.",
+  "experience": "Worked on chatbots, SaaS platforms, and automation tools.",
+  "education": "B.Sc. Computer Science, Penn State University",
+  "skills": "Python, React, TensorFlow, FastAPI"
 }
 ```
 
-Response:
+**Sample Response:**
 
 ```json
 {
-  "markdown": "# John Doe\n## Professional Summary\n..."
+  "markdown": "# Jane Doe\njane@ex.com | (555) 123-4567 | Miami\n\n## Professional Summary\nResults-driven developer skilled in AI & cloud technologies.\n\n## Experience\n* Developed AI chatbots for multiple clients.\n* Improved automation systems by 30%.\n\n## Education\nB.Sc. Computer Science, Penn State University\n\n## Skills\n* Python\n* FastAPI\n* React\n* TensorFlow"
 }
 ```
 
 ---
 
-## 🖨️ Exporting PDF
+## 📁 File Structure
 
-Click **Save as PDF** in the web app — print settings are optimized for both **A4** and **US Letter** formats.
+```
+📦 AI-Resume-Builder/
+│
+├── app.py              # Backend (FastAPI API)
+├── index.html          # Frontend UI (TailwindCSS + JS)
+├── requirements.txt    # Python dependencies
+├── .env.example        # Example environment configuration
+├── README.md           # Documentation
+└── Screenshot.png      # Demo screenshot
+```
+
+> 💡 All files are placed in the root directory for **easy setup and grading**.
+> This structure ensures both frontend and backend run without any additional path configuration.
 
 ---
 
-## 🧩 Requirements
+## 🧾 Usage
 
-```
-fastapi
-uvicorn
-httpx
-python-dotenv
-pydantic
+1. Fill out your details in the left panel (name, skills, education, etc.)
+2. Click **Generate Resume** to let the AI create your draft.
+3. Edit your resume directly inline if needed.
+4. Click **Save as PDF** to export a print-ready resume.
+
+---
+
+## 📸 Screenshot
+
+![App Screenshot](Screenshot.png)
+
+---
+
+## 🧭 Future Scope
+
+* 🌐 Add LinkedIn and Indeed integration for auto-fill.
+* 🧠 Include multiple AI resume templates (Modern, Minimalist, Corporate).
+* 💾 Save and manage previous resumes locally or in the cloud.
+* 🗣️ Add multilingual resume generation support.
+* 🧩 Integrate AI-driven job-matching suggestions.
+
+---
+
+## 🛡️ License
+
+This project is licensed under the [MIT License](LICENSE).
+You can freely use, modify, and distribute it with proper attribution.
+
+---
+
+## ✨ Acknowledgments
+
+* [Google Gemini API](https://ai.google.dev) for the powerful AI model.
+* [TailwindCSS](https://tailwindcss.com) for the sleek, responsive UI.
+* [FastAPI](https://fastapi.tiangolo.com) for the fast, async backend.
+
+---
+
+## 👩‍💻 Author
+
+**Developed by:** *Your Name*
+📧 Email: [yourname@email.com](mailto:yourname@email.com)
+🌐 GitHub: [@your-username](https://github.com/your-username)
+
+---
+
+⭐ *If you found this project helpful, consider giving it a star on GitHub!*
+
 ```
 
 ---
 
-## 🔒 Environment & Security
-
-* **Never commit your `.env` file.**
-* Only share `.env.example`.
-* Gemini API key must be added manually by the grader.
-
----
-
-## 🚀 Optional Deployment
-
-You can deploy the backend to **Render**, **Railway**, or **Heroku** easily.
-
-**Procfile:**
-
+Would you like me to include a **small “Deployment on Render/Vercel” section** too — so others can easily run your project online from your GitHub repo (bonus points if this is for a submission or portfolio)?
 ```
-web: uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}
-```
-
-**render.yaml:**
-
-```yaml
-services:
-  - type: web
-    name: ai-resume-backend
-    env: python
-    plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
-    rootDir: backend
-    envVars:
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_MODEL
-        value: models/gemini-2.0-flash
-```
-
----
-
-## 🧭 Future Enhancements
-
-* Dark theme toggle
-* Multiple resume templates
-* Cloud save (Firebase or Google Drive)
-* Export to DOCX
-
----
-
-## 📄 License
-
-MIT © 2025
-Developed for educational and research purposes.
