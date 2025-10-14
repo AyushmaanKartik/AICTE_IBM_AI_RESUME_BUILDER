@@ -165,17 +165,9 @@ You can freely use, modify, and distribute it with proper attribution.
 
 ## 👩‍💻 Author
 
-**Developed by:** *Your Name*
-📧 Email: [yourname@email.com](mailto:yourname@email.com)
-🌐 GitHub: [@your-username](https://github.com/your-username)
+**Developed by:** *Ayushmaan Kartik*
 
 ---
 
 ⭐ *If you found this project helpful, consider giving it a star on GitHub!*
 
-```
-
----
-
-Would you like me to include a **small “Deployment on Render/Vercel” section** too — so others can easily run your project online from your GitHub repo (bonus points if this is for a submission or portfolio)?
-```
