@@ -1,326 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Builder</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb;
-        }
-        /* Custom styles for resume output to look professional */
-        #resumeOutput {
-            white-space: pre-wrap;
-            line-height: 1.6;
-            padding: 2rem;
-            background-color: white;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-        /* Style for Markdown H1/H2 converted to HTML (simulating an ideal resume header) */
-        #resumeOutput h1 { font-size: 2rem; font-weight: 700; border-bottom: none; margin-bottom: 0.5rem; }
-        #resumeOutput h2 { font-size: 1.25rem; font-weight: 600; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.25rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
-        #resumeOutput p { margin-bottom: 0.5rem; }
-        #resumeOutput ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
-        #resumeOutput li { margin-bottom: 0.25rem; }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #10b981;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Hide UI controls when printing */
-        @media print {
-            #inputArea, #savePdfButton, #statusMessage {
-                display: none !important;
-            }
-            #appContainer {
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            #resumeOutput {
-                box-shadow: none !important;
-                padding: 0 !important;
-                /* Ensure content fits A4/Letter size */
-                width: 7.5in !important;
-                max-width: 100% !important;
-                margin: auto !important;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Resume Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+    :root { --ink:#0f172a; --muted:#475569; --accent:#6366f1; }
+    body{ font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:#f7f9fb; color:var(--ink); }
+
+    /* ===== Toolbar / Layout ===== */
+    .toolbar{ position:sticky; top:0; z-index:20; background:linear-gradient(180deg,#ffffff,rgba(255,255,255,.9)); backdrop-filter:saturate(180%) blur(4px); border-bottom:1px solid #e2e8f0;}
+    .btn{ display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:.8rem; padding:.7rem 1rem; font-weight:600; box-shadow:0 1px 1px rgba(2,6,23,.06),0 1px 2px rgba(2,6,23,.06);}
+    .btn-primary{ background:linear-gradient(90deg,#7c3aed,#6366f1); color:#fff; }
+    .btn-primary:hover{ filter:brightness(1.05); }
+    .btn-ghost{ background:#fff; border:1px solid #e2e8f0; color:#111827; }
+    .card{ background:#fff; border:1px solid #e2e8f0; border-radius:1rem; box-shadow:0 10px 20px -12px rgba(2,6,23,.10); }
+
+    /* ===== Resume Sheet (preview + print) ===== */
+    .sheet{
+      width:8.5in; min-height:11in; margin:0 auto; background:#fff; padding:.55in;
+      overflow-wrap:anywhere; hyphens:auto; border-radius:0.75rem; /* match card corners */
+    }
+    .a4 .sheet{ width:8.27in; min-height:11.69in; }
+
+    .sheet h1{ font-size:1.9rem; font-weight:800; margin:0 0 .25rem 0; }
+    .sheet h2{ font-size:1.05rem; font-weight:800; letter-spacing:.02em; margin:1rem 0 .4rem; }
+    .sheet p{ margin:.25rem 0; line-height:1.5; }
+    .sheet ul{ list-style:disc; margin:.25rem 0 .35rem 1.2rem; }
+    .sheet li{ margin:.2rem 0; }
+    .sheet h1,.sheet h2{ break-after:avoid; page-break-after:avoid; }
+    .block,.sheet ul,.sheet li{ break-inside:avoid; page-break-inside:avoid; }
+
+    /* Preview card should scroll instead of leaking beyond rounded border */
+    .preview-card{ overflow:auto !important; }
+
+    /* Print settings */
+    @page { size: 8.5in 11in; margin: .5in; }
+    .a4 @page { size: A4; margin: .5in; }
+
+    @media print{
+      html,body{ background:#fff; height:auto; }
+      #appContainer,.card{ padding:0 !important; margin:0 !important; border:none !important; box-shadow:none !important; }
+      .toolbar,#inputArea,.preview-title-bar{ display:none !important; } /* hide top UI + “Resume Preview” bar */
+      .sheet{ width:auto !important; min-height:auto !important; padding:0 !important; border-radius:0 !important; }
+    }
+
+    /* Slightly tighter spacing during print */
+    .for-print .sheet{ font-size:0.97rem; padding:.5in; }
+
+    /* Spinner */
+    .spinner{ border:4px solid rgba(0,0,0,.08); border-top:4px solid var(--accent); border-radius:50%; width:24px; height:24px; animation:spin 1s linear infinite }
+    @keyframes spin{ 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+    /* Inline edit highlight */
+    .editable-active{ outline:2px dashed #a78bfa; outline-offset:6px; }
+  </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body>
+  <!-- Top toolbar -->
+  <div class="toolbar">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="font-bold text-slate-800">AI Resume Builder</div>
+      <div class="flex gap-2">
+        <button id="editBtn" class="btn btn-ghost">Edit</button>
+        <button id="downloadBtn" class="btn btn-primary">Download PDF</button>
+        <select id="paperSelect" class="btn btn-ghost px-3">
+          <option value="letter">US Letter</option>
+          <option value="a4">A4</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-    <div id="appContainer" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div id="appContainer" class="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Input -->
+    <div id="inputArea" class="card p-6">
+      <h2 class="text-xl font-bold mb-1">Your Details</h2>
+      <p class="text-slate-600 mb-4">Fill these and generate. PDF layout is optimized to fit one page.</p>
 
-        <div id="inputArea" class="bg-white p-6 rounded-xl shadow-lg h-fit">
-            <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">AI Resume Input</h1>
-            <p class="text-gray-600 mb-6">Fill in your details, and the AI will draft a professional resume.</p>
-
-            <form id="resumeForm" class="space-y-6">
-
-                <div>
-                    <h2 class="text-xl font-semibold mb-3 text-green-600">1. Personal & Contact Information</h2>
-                    <div class="space-y-4">
-                        <input type="text" id="fullName" placeholder="Full Name (e.g., Jane Doe)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
-                        <input type="text" id="contactInfo" placeholder="Email, Phone, LinkedIn URL, City" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
-                    </div>
-                </div>
-
-                <div>
-                    <h2 class="text-xl font-semibold mb-3 text-green-600">2. Target Role & Professional Summary</h2>
-                    <input type="text" id="targetRole" placeholder="Target Job Title (e.g., Senior Software Engineer)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 mb-4">
-                    <textarea id="summary" rows="3" placeholder="Briefly describe your career goals and core expertise (e.g., '5+ years experience building scalable web applications...')" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
-                </div>
-
-                <div>
-                    <h2 class="text-xl font-semibold mb-3 text-green-600">3. Work Experience (most recent first)</h2>
-                    <textarea id="experience" rows="6" placeholder="List your roles, companies, dates, and 3-5 key achievements/responsibilities for each. Focus on quantifiable results. Example: Led a team of 3 engineers to deliver X, resulting in 15% efficiency gain." required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h2 class="text-xl font-semibold mb-3 text-green-600">4. Education</h2>
-                        <textarea id="education" rows="3" placeholder="Degree, Institution, City, Graduation Year" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-semibold mb-3 text-green-600">5. Key Skills</h2>
-                        <textarea id="skills" rows="3" placeholder="List technical and soft skills (e.g., Python, AWS, Leadership, Data Analysis)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"></textarea>
-                    </div>
-                </div>
-
-                <button type="submit" id="generateButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md">
-                    Generate Resume
-                </button>
-            </form>
+      <form id="resumeForm" class="space-y-5">
+        <div class="grid grid-cols-1 gap-3">
+          <label class="text-sm font-semibold">Full Name
+            <input id="fullName" class="mt-1 w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200" placeholder="Jane Doe" required>
+          </label>
+          <label class="text-sm font-semibold">Contact (Email · Phone · LinkedIn · City)
+            <input id="contactInfo" class="mt-1 w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200" placeholder="jane@ex.com · (555) 123-4567 · linkedin.com/in/jane · Miami" required>
+          </label>
         </div>
 
-        <div id="outputArea" class="bg-gray-100 p-6 rounded-xl shadow-lg relative min-h-[400px]">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4 border-b pb-2">Resume Preview (Markdown)</h1>
-
-            <div id="statusMessage" class="text-center py-4 text-gray-600">
-                Enter your details and click 'Generate Resume' to see your draft here.
-            </div>
-
-            <div id="loadingIndicator" class="hidden flex justify-center items-center absolute inset-0 bg-white bg-opacity-80 z-10">
-                <div class="flex flex-col items-center">
-                    <div class="spinner mb-3"></div>
-                    <p class="text-green-600 font-medium">AI is drafting your resume...</p>
-                </div>
-            </div>
-
-            <div id="resumeOutput" class="rounded-lg text-gray-800 prose max-w-none transition duration-300">
-                </div>
-
-            <button id="savePdfButton" class="hidden mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 shadow-md" onclick="saveAsPdf()">
-                Save as PDF (via Print)
-            </button>
-
-            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg"></div>
+        <div class="grid grid-cols-1 gap-3">
+          <label class="text-sm font-semibold">Target Role
+            <input id="targetRole" class="mt-1 w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200" placeholder="Software Engineer" required>
+          </label>
+          <label class="text-sm font-semibold">Professional Summary
+            <textarea id="summary" rows="3" class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-200" placeholder="1–3 lines highlighting your strengths"></textarea>
+          </label>
         </div>
 
+        <label class="text-sm font-semibold block">Experience
+          <textarea id="experience" rows="6" class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-200" placeholder="Roles · Companies · Dates · Achievements" required></textarea>
+        </label>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label class="text-sm font-semibold">Education
+            <textarea id="education" rows="3" class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-200" placeholder="Degree · Institution · Year" required></textarea>
+          </label>
+          <label class="text-sm font-semibold">Key Skills
+            <textarea id="skills" rows="3" class="mt-1 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-200" placeholder="Python, React, SQL, …" required></textarea>
+          </label>
+        </div>
+
+        <div class="flex gap-3">
+          <button type="submit" id="generateButton" class="btn btn-primary flex-1">Generate</button>
+          <button type="button" id="clearBtn" class="btn btn-ghost">Clear</button>
+        </div>
+
+        <div id="errorMessage" class="hidden mt-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm"></div>
+      </form>
     </div>
 
-    <script>
-        const form = document.getElementById('resumeForm');
-        const generateButton = document.getElementById('generateButton');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const resumeOutput = document.getElementById('resumeOutput');
-        const statusMessage = document.getElementById('statusMessage');
-        const savePdfButton = document.getElementById('savePdfButton');
-        const errorMessageDiv = document.getElementById('errorMessage');
+    <!-- Preview -->
+    <div class="card p-0 relative preview-card">
+      <div class="px-6 pt-4 pb-2 border-b preview-title-bar">
+        <h2 class="text-lg font-semibold">Resume Preview</h2>
+        <p id="statusMessage" class="text-slate-500 text-sm">Your resume will appear here after you click Generate.</p>
+      </div>
 
-        // IMPORTANT: Replace "YOUR_GEMINI_API_KEY_HERE" with your actual Gemini API Key.
-        // For a public GitHub project, consider keeping the API key secret and
-        // using a serverless function, but for a simple project, hardcoding is common.
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
-        const API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
+      <div id="loadingIndicator" class="hidden absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex items-center justify-center">
+        <div class="spinner"></div>
+      </div>
 
-        function showMessage(text, isError = false) {
-            errorMessageDiv.textContent = text;
-            if (isError) {
-                errorMessageDiv.classList.remove('hidden', 'bg-green-100', 'text-green-700');
-                errorMessageDiv.classList.add('bg-red-100', 'text-red-700');
-            } else {
-                errorMessageDiv.classList.add('hidden');
-            }
-        }
+      <div class="p-4">
+        <div id="resumeOutput" class="sheet" contenteditable="false"></div>
+      </div>
+    </div>
+  </div>
 
-        /**
-         * Simple Markdown to HTML converter for display purposes.
-         */
-        function markdownToHtml(markdown) {
-            let html = markdown || "";
+  <script>
+    // >>> Set your backend here
+    const BACKEND_URL = "http://localhost:8000/api/generate";
+    // const BACKEND_URL = "https://your-backend.onrender.com/api/generate"; // when deployed
 
-            // Convert lists (simple bullet points)
-            html = html.replace(/^\* (.*)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.*<\/li>(\s*<li>.*<\/li>)*)/gs, '<ul>$1</ul>');
+    // Elements
+    const form = document.getElementById("resumeForm");
+    const generateButton = document.getElementById("generateButton");
+    const loadingIndicator = document.getElementById("loadingIndicator");
+    const resumeOutput = document.getElementById("resumeOutput");
+    const statusMessage = document.getElementById("statusMessage");
+    const errorMessageDiv = document.getElementById("errorMessage");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const paperSelect = document.getElementById("paperSelect");
+    const editBtn = document.getElementById("editBtn");
+    let editMode = false;
 
-            // Convert bold and italics
-            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // UX clamps so the model doesn’t overflow tokens
+    document.getElementById('summary').maxLength = 1200;
+    document.getElementById('experience').maxLength = 4000;
+    document.getElementById('education').maxLength = 1200;
+    document.getElementById('skills').maxLength = 1200;
 
-            // Convert headings (H1, H2) - H1 should be the name, H2 for sections
-            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-            html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+    // Paper size toggle
+    paperSelect.addEventListener('change', (e)=>{
+      document.documentElement.classList.toggle('a4', e.target.value === 'a4');
+    });
 
-            // Convert remaining lines into paragraphs (excluding ul/li/h tags which are multi-line)
-            html = html.split('\n').map(line => {
-                const trimmedLine = line.trim();
-                if (!trimmedLine || trimmedLine.startsWith('<h') || trimmedLine.startsWith('<ul') || trimmedLine.startsWith('</ul') || trimmedLine.startsWith('<li') || trimmedLine.startsWith('</li')) {
-                    return line;
-                }
-                return `<p>${line}</p>`;
-            }).join('\n');
+    // Print / PDF (tighten spacing briefly to avoid overflow)
+    downloadBtn.addEventListener('click', ()=>{
+      document.body.classList.add('for-print');
+      setTimeout(()=> window.print(), 50);
+      setTimeout(()=> document.body.classList.remove('for-print'), 1200);
+    });
 
-            return html;
-        }
+    // Inline edit toggle
+    editBtn.addEventListener('click', ()=>{
+      editMode = !editMode;
+      resumeOutput.setAttribute('contenteditable', String(editMode));
+      resumeOutput.classList.toggle('editable-active', editMode);
+      editBtn.textContent = editMode ? 'Finish Editing' : 'Edit';
+    });
 
-        /**
-         * Calls the Gemini API to generate the resume content.
-         */
-        async function callGeminiAPI(userData, retries = 3) {
-            const systemPrompt = `You are a world-class professional resume writer. Your task is to generate a polished, modern, and high-impact resume in clear **Markdown format** based *only* on the user's input. 
-            
-            **Formatting Rules:**
-            1. Use a single '#' for the full name.
-            2. Use a single '##' for section headers (e.g., ## Professional Summary, ## Experience, ## Education, ## Skills).
-            3. Use bullet points '*' for job responsibilities/achievements and skill lists.
-            4. Do not include any introductory or concluding sentences outside the resume content itself.
-            5. Ensure the language is action-oriented and professional.`;
+    // Clear form + preview
+    document.getElementById('clearBtn').addEventListener('click', ()=>{
+      form.reset();
+      resumeOutput.innerHTML = "";
+      statusMessage.classList.remove('hidden');
+    });
 
-            const userQuery = `Generate a resume. Here is the candidate data:
-                Full Name: ${userData.fullName}
-                Contact Information: ${userData.contactInfo}
-                Target Role: ${userData.targetRole}
-                Professional Summary: ${userData.summary}
-                Work Experience: ${userData.experience}
-                Education: ${userData.education}
-                Key Skills: ${userData.skills}
-            `;
+    // Markdown → HTML (supports *, -, • bullets)
+    function markdownToHtml(md) {
+      let html = md || "";
 
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                config: {
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }]
-                    }
-                },
-            };
+      // Headings
+      html = html.replace(/^### (.*)$/gm, '<h3 class="font-semibold">$1</h3>');
+      html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+      html = html.replace(/^# (.*)$/gm, '<h1>$1</h1>');
 
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(API_URL + API_KEY, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
+      // Emphasis
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-                    if (!response.ok) {
-                        // Attempt to read the error from the response body if available
-                        const errorBody = await response.json();
-                        const errorDetail = errorBody.error?.message || `HTTP error! status: ${response.status}`;
-                        throw new Error(`API Request Failed: ${errorDetail}`);
-                    }
+      // Bullets
+      html = html.replace(/^(?:\*|-|•)\s+(.*)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>(?:\n)?)+/g, m => `<ul>${m}</ul>`);
 
-                    const result = await response.json();
-                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      // Paragraphs
+      html = html.split("\n").map(line=>{
+        const t=line.trim();
+        if(!t || /^<\/?(h\d|ul|li)/.test(t)) return line;
+        return `<p>${line}</p>`;
+      }).join("\n");
 
-                    if (generatedText) {
-                        return generatedText;
-                    } else {
-                        throw new Error("API response was empty or malformed.");
-                    }
-                } catch (error) {
-                    if (i < retries - 1) {
-                        const delay = Math.pow(2, i) * 1000; // Exponential backoff
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                    } else {
-                        throw error; // Re-throw the error after final retry
-                    }
-                }
-            }
-        }
+      return html;
+    }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-                 showMessage("ERROR: Please replace 'YOUR_GEMINI_API_KEY_HERE' in the script with your actual API key.", true);
-                 return;
-            }
+    async function callBackendAPI(userData) {
+      const res = await fetch(BACKEND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      if (!res.ok) throw new Error(`Backend error: ${await res.text()}`);
+      const data = await res.json();
+      return data.markdown;
+    }
 
-            const userData = {
-                fullName: document.getElementById('fullName').value,
-                contactInfo: document.getElementById('contactInfo').value,
-                targetRole: document.getElementById('targetRole').value,
-                summary: document.getElementById('summary').value,
-                experience: document.getElementById('experience').value,
-                education: document.getElementById('education').value,
-                skills: document.getElementById('skills').value,
-            };
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      resumeOutput.innerHTML = "";
+      errorMessageDiv.classList.add("hidden");
+      statusMessage.classList.add("hidden");
+      loadingIndicator.classList.remove("hidden");
+      generateButton.disabled = true;
+      generateButton.textContent = "Generating…";
 
-            // Clear previous results
-            resumeOutput.innerHTML = '';
-            errorMessageDiv.classList.add('hidden');
-            savePdfButton.classList.add('hidden');
-            statusMessage.classList.add('hidden');
-            loadingIndicator.classList.remove('hidden');
-            generateButton.disabled = true;
-            generateButton.textContent = 'Generating...';
+      const userData = {
+        fullName: document.getElementById("fullName").value.trim(),
+        contactInfo: document.getElementById("contactInfo").value.trim(),
+        targetRole: document.getElementById("targetRole").value.trim(),
+        summary: document.getElementById("summary").value.trim(),
+        experience: document.getElementById("experience").value.trim(),
+        education: document.getElementById("education").value.trim(),
+        skills: document.getElementById("skills").value.trim(),
+      };
 
-            try {
-                const markdownResume = await callGeminiAPI(userData);
-
-                // Convert markdown to simple HTML for display
-                const htmlResume = markdownToHtml(markdownResume);
-
-                resumeOutput.innerHTML = htmlResume;
-                statusMessage.classList.add('hidden');
-                savePdfButton.classList.remove('hidden');
-
-            } catch (error) {
-                console.error("Resume Generation Error:", error);
-                resumeOutput.innerHTML = '';
-                statusMessage.classList.remove('hidden');
-                statusMessage.textContent = 'Enter your details and click \'Generate Resume\' to see your draft here.';
-                showMessage('Failed to generate resume. Error: ' + error.message, true);
-            } finally {
-                loadingIndicator.classList.add('hidden');
-                generateButton.disabled = false;
-                generateButton.textContent = 'Generate Resume';
-            }
-        });
-
-        // Function to trigger browser print dialog for PDF saving
-        window.saveAsPdf = function() {
-            window.print();
-        };
-
-        // Populate form with example data for quick testing
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('fullName').value = 'Alexandra V. Chen';
-            document.getElementById('contactInfo').value = 'alex.chen@example.com | (555) 123-4567 | linkedin.com/in/alexchen';
-            document.getElementById('targetRole').value = 'Product Manager | Tech Lead';
-            document.getElementById('summary').value = 'Highly results-driven professional with 8+ years of experience in full-stack development, leading cross-functional teams, and successfully launching 4 major software products. Seeking a challenging Product Manager role to leverage technical expertise and strategic thinking.';
-            document.getElementById('experience').value = `Senior Software Engineer | Innovatech Solutions | 2018 - Present
-- Led a team of 5 engineers in the migration of legacy services to AWS Lambda, resulting in a 40% reduction in operating costs.
-- Developed and launched a new customer-facing analytics dashboard using React and Python, increasing daily active users by 25k.
-
-Software Developer | Startup X | 2016 - 2018
-- Implemented core API features for a real-time data streaming platform, improving latency by 15%.`;
-            document.getElementById('education').value = 'M.S. Computer Science, Stanford University, 2016 | B.S. Electrical Engineering, MIT, 2014';
-            document.getElementById('skills').value = 'Python, JavaScript, TypeScript, React, Node.js, AWS (Lambda, S3, EC2), SQL, Agile Methodology, Strategic Planning, Team Leadership';
-        });
-
-    </script>
+      try {
+        const markdownResume = await callBackendAPI(userData);
+        resumeOutput.innerHTML = markdownToHtml(markdownResume);
+      } catch (error) {
+        errorMessageDiv.classList.remove("hidden");
+        errorMessageDiv.textContent = "Error: " + error.message;
+        statusMessage.classList.remove("hidden");
+      } finally {
+        loadingIndicator.classList.add("hidden");
+        generateButton.disabled = false;
+        generateButton.textContent = "Generate";
+      }
+    });
+  </script>
 </body>
 </html>
